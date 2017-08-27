@@ -1,0 +1,74 @@
+---
+title: "Strava Data in R"
+output: html_notebook
+---
+
+<!-- This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.  -->
+<!-- Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*.  -->
+<!-- Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*. -->
+<!-- When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file). -->
+
+#Strava Data in R
+
+This script plays with the functions for downloading Strava data using the Strava API.  It relies mostly on package `rStrava` and the [documentation](https://github.com/fawda123/rStrava) on GitHub. 
+
+##Install Packages
+```{r packages}
+# install.packages('devtools')
+# devtools::install_github('fawda123/rStrava')
+library(rStrava)
+library(lubridate)
+```
+
+Lets look at the help files: 
+```{r}
+help.search('notoken', package = 'rStrava')
+help.search('token', package = 'rStrava')
+```
+
+##Scraping functions (no token)
+
+An example using the scraping functions for a particular athlete:
+```{r}
+pub.data <- athl_fun(c(2182668, 164228), trace = FALSE)
+pub.data
+```
+
+Lets break that down
+```{r}
+#Lee's data
+pub.lee <- pub.data$`2182668`
+
+month.lee <- data.frame(athlete = rep("Lee", length(pub.lee$monthly)), 
+                        km.mo = pub.lee$monthly)
+month.lee <- data.frame(
+  year = c(rep(2016, 5), rep(2017,8)),
+  month = month(seq(as.Date("2016/08/01"), by = "month", 
+                    length.out = length(pub.lee$monthly))),
+  month.lee, row.names = NULL)
+
+#Alex's data
+pub.alex <- pub.data$`164228`
+
+month.alex <- data.frame(athlete = rep("Alex", length(pub.alex$monthly)), 
+                        km.mo = pub.alex$monthly)
+month.alex <- data.frame(
+  year = c(rep(2016, 5), rep(2017,8)),
+  month = month(seq(as.Date("2016/08/01"), by = "month", 
+                    length.out = length(pub.alex$monthly))),
+  month.alex, row.names = NULL)
+
+month.data <- rbind(month.lee, month.alex)
+month.data$yr.mon <- paste(month.data$year, "-", month.data$month, sep = "")
+month.data
+```
+
+
+
+
+##have a go with plotly
+```{r}
+p <- ggplot(data = month.data, aes(y = km.mo, x=yr.mon)) +
+            geom_bar(stat="identity", position="dodge", aes(fill=athlete))
+plot(p)
+```
